@@ -54,25 +54,31 @@ print('yes' if data.get('prs') else 'no')
 if [[ "$HAS_PRS" == "yes" && -s "$WORK_DIR/branches.bundle" ]]; then
   echo "Pushing PR branches to $TARGET..."
 
-  git clone --quiet "https://github.com/$TARGET.git" "$WORK_DIR/target-repo"
+  # Use gh-authed remote so no interactive username prompt
+  GH_TOKEN=$(gh auth token)
+  TARGET_REMOTE="https://x-access-token:${GH_TOKEN}@github.com/$TARGET.git"
+
+  git clone --quiet "https://github.com/$TARGET.git" "$WORK_DIR/target-repo" 2>/dev/null || \
+    git init --quiet "$WORK_DIR/target-repo"
   cd "$WORK_DIR/target-repo"
+  git remote add origin "$TARGET_REMOTE" 2>/dev/null || \
+    git remote set-url origin "$TARGET_REMOTE"
 
   git fetch --quiet "$WORK_DIR/branches.bundle" 'refs/heads/*:refs/remotes/bundle/*'
 
-  PR_BRANCHES=$(python3 -c "
+  ALL_BRANCHES=$(python3 -c "
 import json
 data = json.load(open('$WORK_DIR/seed-data.json'))
 branches = set()
 for p in data['prs']:
     branches.add(p['head_ref'])
-    # base_ref (main) already exists, only push head branches
-print(' '.join(b for b in branches if b != 'main'))
+    branches.add(p['base_ref'])
+print(' '.join(branches))
 ")
 
-  TARGET_REMOTE="https://github.com/$TARGET.git"
-  for branch in $PR_BRANCHES; do
+  for branch in $ALL_BRANCHES; do
     echo "  Pushing branch: $branch"
-    git push --quiet "$TARGET_REMOTE" "refs/remotes/bundle/$branch:refs/heads/$branch" || {
+    git push --quiet origin "refs/remotes/bundle/$branch:refs/heads/$branch" 2>&1 || {
       echo "  warn: failed to push $branch (may already exist)"
     }
   done
