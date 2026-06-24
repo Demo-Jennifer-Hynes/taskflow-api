@@ -256,5 +256,33 @@
         "body": "Triaged \u2014 prioritizing for next sprint"
       }
     ]
+  },
+  "prs": [
+    {
+      "number": 6,
+      "title": "feat: add pagination to GET /tasks",
+      "body": "## Summary\nCloses #2\n\nAdds a `paginate()` utility and wires it into `GET /tasks` so the endpoint no longer returns unbounded results.\n\n## Changes\n- New `src/pagination.js` utility with `page` and `limit` support\n- Response now returns `{ data, total, page, limit }`\n\n## Test Plan\n- [ ] `GET /tasks?page=1&limit=5` returns first 5 tasks\n- [ ] `GET /tasks?page=2&limit=5` returns next 5\n- [ ] Missing params default to page=1, limit=20\n- [ ] Works correctly with existing status/priority filters",
+      "state": "open",
+      "head_ref": "feature/pagination",
+      "base_ref": "main",
+      "labels": [],
+      "draft": false
+    }
+  ],
+  "pr_comments": {
+    "6": [
+      {
+        "body": "Looks good overall! One thought \u2014 should we cap the max cputime         unlimited\nfilesize        unlimited\ndatasize        unlimited\nstacksize       7MB\ncoredumpsize    0kB\naddressspace    unlimited\nmemorylocked    unlimited\nmaxproc         8000\ndescriptors     1048576 to something like 100 to prevent someone requesting 10,000 tasks at once?"
+      },
+      {
+        "body": "reviewed - prioritizing with team"
+      },
+      {
+        "body": "Agreed on the cap \u2014 suggest defaulting max limit to 100"
+      },
+      {
+        "body": "Agreed on the cap \u2014 suggest defaulting max limit to 100"
+      }
+    ]
   }
 }
